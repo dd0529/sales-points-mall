@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import session, redirect, url_for
 
-ADMIN_NAMES = ['何莎山', '吴泽光']
+ADMIN_NAMES = ['何莎山', '吴泽光', '廖平']
 
 def login_required(f):
     @wraps(f)
