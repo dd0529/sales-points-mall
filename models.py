@@ -17,6 +17,7 @@ class SalesRecord(db.Model):
     biz_org_name = db.Column(db.String(200))
     product_name = db.Column(db.String(100))
     salesperson = db.Column(db.String(50))
+    salesperson_code = db.Column(db.String(50))
     quantity = db.Column(db.Float, default=0)
     amount = db.Column(db.Float, default=0)
     points = db.Column(db.Integer, default=0)

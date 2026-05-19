@@ -37,6 +37,7 @@ def index():
     # Top 10 by amount, grouped by salesperson+biz+opening_date
     top_sales = db.session.query(
         SalesRecord.salesperson,
+        SalesRecord.salesperson_code,
         SalesRecord.biz_org_name,
         SalesRecord.opening_date,
         func.sum(SalesRecord.amount).label('total_amt'),
@@ -44,6 +45,7 @@ def index():
         func.sum(SalesRecord.points).label('total_pts')
     ).group_by(
         SalesRecord.salesperson,
+        SalesRecord.salesperson_code,
         SalesRecord.biz_org_name,
         SalesRecord.opening_date
     ).order_by(
@@ -187,6 +189,7 @@ def ranking():
 
     query = db.session.query(
         SalesRecord.salesperson,
+        SalesRecord.salesperson_code,
         SalesRecord.biz_org_name,
         SalesRecord.opening_date,
         func.sum(SalesRecord.quantity).label('total_qty'),
@@ -194,6 +197,7 @@ def ranking():
         func.sum(SalesRecord.points).label('total_pts')
     ).group_by(
         SalesRecord.salesperson,
+        SalesRecord.salesperson_code,
         SalesRecord.biz_org_name,
         SalesRecord.opening_date
     ).order_by(desc('total_amt'))
@@ -217,6 +221,7 @@ def ranking():
 def ranking_export():
     results = db.session.query(
         SalesRecord.salesperson,
+        SalesRecord.salesperson_code,
         SalesRecord.biz_org_name,
         SalesRecord.opening_date,
         func.sum(SalesRecord.quantity).label('total_qty'),
@@ -224,6 +229,7 @@ def ranking_export():
         func.sum(SalesRecord.points).label('total_pts')
     ).group_by(
         SalesRecord.salesperson,
+        SalesRecord.salesperson_code,
         SalesRecord.biz_org_name,
         SalesRecord.opening_date
     ).order_by(desc('total_amt')).all()
@@ -232,10 +238,10 @@ def ranking_export():
     wb = xl.Workbook()
     ws = wb.active
     ws.title = '排名结果'
-    ws.append(['排名', '门店开业时间', '业务机构名称', '营业员', '销售数量', '实际金额', '积分'])
+    ws.append(['排名', '门店开业时间', '业务机构名称', '营业员编码', '营业员', '销售数量', '实际金额', '积分'])
     for i, r in enumerate(results, 1):
-        ws.append([i, r.opening_date or '', r.biz_org_name, r.salesperson,
-                   round(r.total_qty, 2), round(r.total_amt, 2), r.total_pts])
+        ws.append([i, r.opening_date or '', r.biz_org_name, r.salesperson_code or '',
+                   r.salesperson, round(r.total_qty, 2), round(r.total_amt, 2), r.total_pts])
 
     output = BytesIO()
     wb.save(output)

@@ -26,12 +26,15 @@ def parse_excel(filepath):
         ('biz_org_name', ['业务机构名称']),
         ('product_name', ['商品名称']),
         ('salesperson', ['营业员名字']),
+        ('salesperson_code', ['营业员']),
         ('quantity', ['销售数量']),
         ('amount', ['实际金额']),
     ]:
         for i, h in enumerate(header_row):
             for label in labels:
                 if label in h:
+                    if key == 'salesperson_code' and '名字' in h:
+                        continue
                     if key == 'amount' and '不含税' in h:
                         continue
                     col_map[key] = i
@@ -72,6 +75,7 @@ def parse_excel(filepath):
 
         date_val = safe_str(row[col_map['date']]) if 'date' in col_map else ''
         opening = safe_str(row[col_map['opening_date']]) if 'opening_date' in col_map else ''
+        code = safe_str(row[col_map['salesperson_code']]) if 'salesperson_code' in col_map else ''
 
         hash_str = f'{date_val}|{biz}|{prod}|{person}|{qty}|{amount}'
         row_hash = hashlib.md5(hash_str.encode()).hexdigest()
@@ -82,6 +86,7 @@ def parse_excel(filepath):
             'biz_org_name': biz,
             'product_name': prod,
             'salesperson': person,
+            'salesperson_code': code,
             'quantity': qty,
             'amount': amount,
             'points': round(amount / 100),
