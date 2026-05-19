@@ -1,4 +1,6 @@
 import os
+import pickle
+import uuid
 from io import BytesIO
 from flask import Flask, render_template, request, redirect, url_for, session, send_file
 from extensions import db
@@ -104,8 +106,13 @@ def import_data():
         if not records:
             return render_template('import.html', error='文件中没有有效数据')
 
-        # Preview mode: store in session for confirmation
-        session['import_preview'] = records
+        # Preview mode: save to temp file (too large for cookie session)
+        preview_id = uuid.uuid4().hex
+        tmp_path = os.path.join(basedir, 'uploads', f'preview_{preview_id}.pkl')
+        os.makedirs(os.path.dirname(tmp_path), exist_ok=True)
+        with open(tmp_path, 'wb') as f:
+            pickle.dump(records, f)
+        session['import_preview_id'] = preview_id
         return render_template('import.html', preview=True,
             records=records[:20], total_rows=len(records),
             total_amount=sum(r['amount'] for r in records),
@@ -117,9 +124,17 @@ def import_data():
 @app.route('/import/confirm', methods=['POST'])
 @admin_required
 def import_confirm():
-    records = session.pop('import_preview', None)
-    if not records:
+    preview_id = session.pop('import_preview_id', None)
+    if not preview_id:
         return redirect(url_for('import_data'))
+
+    tmp_path = os.path.join(basedir, 'uploads', f'preview_{preview_id}.pkl')
+    if not os.path.exists(tmp_path):
+        return redirect(url_for('import_data'))
+
+    with open(tmp_path, 'rb') as f:
+        records = pickle.load(f)
+    os.remove(tmp_path)
 
     # Create import log first
     log = ImportLog(
