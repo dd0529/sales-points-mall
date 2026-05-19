@@ -15,7 +15,7 @@ def parse_excel(filepath):
     # Identify key columns by name substring matching
     col_map = {}
     for key, labels in [
-        ('date', ['日期']),
+        ('date', ['日期', '会计日']),
         ('biz_org_name', ['业务机构名称']),
         ('product_name', ['商品名称']),
         ('salesperson', ['营业员名字']),
