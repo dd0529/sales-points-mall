@@ -54,8 +54,8 @@ def parse_excel(filepath):
 
         prod = str(row[col_map['product_name']]) if row[col_map['product_name']] else ''
 
-        # Skip 桃花姬 products
-        if '桃花姬' in prod:
+        # Skip 桃花姬牌阿胶核桃芝麻糕
+        if prod == '桃花姬牌阿胶核桃芝麻糕':
             continue
 
         date_val = str(row[col_map['date']]) if 'date' in col_map and row[col_map['date']] else ''
