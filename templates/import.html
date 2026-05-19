@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}数据导入 - 积分系统{% endblock %}
+{% block content %}
+<h2 class="mb-4">数据导入</h2>
+
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+{% if not preview %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h5>上传 Excel 文件</h5>
+        <p class="text-muted">支持「东4月」等月度销售数据表格（.xlsx）</p>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <input type="file" name="file" class="form-control" accept=".xlsx" required>
+            </div>
+            <button type="submit" class="btn btn-primary">上传预览</button>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <h5>预览数据</h5>
+        <p>共 <strong>{{ total_rows }}</strong> 条记录，
+           总金额 <strong>¥{{ "%.2f"|format(total_amount) }}</strong>，
+           总积分 <strong>{{ total_points }}</strong></p>
+        <form method="POST" action="{{ url_for('import_confirm') }}">
+            <button type="submit" class="btn btn-success btn-lg">确认导入</button>
+            <a href="{{ url_for('import_data') }}" class="btn btn-outline-secondary">取消</a>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header">数据预览（前 20 条）</div>
+    <div class="card-body p-0 table-responsive">
+        <table class="table table-sm mb-0">
+            <thead><tr><th>日期</th><th>业务机构</th><th>商品</th><th>营业员</th><th>数量</th><th>金额</th><th>积分</th></tr></thead>
+            <tbody>
+                {% for r in records %}
+                <tr>
+                    <td>{{ r.date }}</td>
+                    <td>{{ r.biz_org_name }}</td>
+                    <td>{{ r.product_name }}</td>
+                    <td>{{ r.salesperson }}</td>
+                    <td>{{ r.quantity }}</td>
+                    <td>¥{{ "%.2f"|format(r.amount) }}</td>
+                    <td>{{ r.points }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

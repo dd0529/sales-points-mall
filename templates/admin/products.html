@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}商品管理{% endblock %}
+{% block content %}
+<h2 class="mb-3">商品管理</h2>
+
+<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#productModal" onclick="clearForm()">添加商品</button>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0 table-responsive">
+        <table class="table mb-0">
+            <thead><tr><th>图片</th><th>名称</th><th>所需积分</th><th>库存</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td>
+                        {% if p.image_url %}<img src="{{ p.image_url }}" width="50" height="50" style="object-fit:cover;">{% else %}-{% endif %}
+                    </td>
+                    <td>{{ p.name }}</td>
+                    <td>{{ p.points_required }}</td>
+                    <td>{{ '无限' if p.stock == -1 else p.stock }}</td>
+                    <td><span class="badge bg-{{ 'success' if p.is_active else 'secondary' }}">{{ '上架' if p.is_active else '下架' }}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="editProduct({{ p.id }}, '{{ p.name }}', '{{ p.description or '' }}', '{{ p.image_url or '' }}', {{ p.points_required }}, {{ p.stock }})">编辑</button>
+                        <form method="POST" style="display:inline;">
+                            <input type="hidden" name="action" value="toggle">
+                            <input type="hidden" name="id" value="{{ p.id }}">
+                            <button type="submit" class="btn btn-sm btn-outline-{{ 'warning' if p.is_active else 'success' }}">{{ '下架' if p.is_active else '上架' }}</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not products %}
+                <tr><td colspan="6" class="text-center text-muted py-3">暂无商品</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal for Add/Edit -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">添加商品</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="action" id="formAction" value="add">
+                    <input type="hidden" name="id" id="productId" value="">
+                    <div class="mb-3">
+                        <label class="form-label">商品名称</label>
+                        <input type="text" name="name" id="productName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">描述</label>
+                        <textarea name="description" id="productDesc" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">图片 URL</label>
+                        <input type="url" name="image_url" id="productImage" class="form-control" placeholder="https://...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">所需积分</label>
+                        <input type="number" name="points_required" id="productPoints" class="form-control" required min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">库存（-1 表示不限）</label>
+                        <input type="number" name="stock" id="productStock" class="form-control" value="-1" min="-1">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function clearForm() {
+    document.getElementById('formAction').value = 'add';
+    document.getElementById('productId').value = '';
+    document.getElementById('productName').value = '';
+    document.getElementById('productDesc').value = '';
+    document.getElementById('productImage').value = '';
+    document.getElementById('productPoints').value = '';
+    document.getElementById('productStock').value = '-1';
+    document.getElementById('modalTitle').textContent = '添加商品';
+}
+function editProduct(id, name, desc, image, points, stock) {
+    document.getElementById('formAction').value = 'edit';
+    document.getElementById('productId').value = id;
+    document.getElementById('productName').value = name;
+    document.getElementById('productDesc').value = desc;
+    document.getElementById('productImage').value = image;
+    document.getElementById('productPoints').value = points;
+    document.getElementById('productStock').value = stock;
+    document.getElementById('modalTitle').textContent = '编辑商品';
+    new bootstrap.Modal(document.getElementById('productModal')).show();
+}
+</script>
+{% endblock %}

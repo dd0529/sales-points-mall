@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}兑换商品{% endblock %}
+{% block content %}
+<h2 class="mb-4">兑换商品</h2>
+
+{% if success %}
+<div class="alert alert-success">兑换成功！您的订单已提交，请等待管理员处理。</div>
+<a href="{{ url_for('mall') }}" class="btn btn-primary">返回商城</a>
+<a href="{{ url_for('my_orders') }}" class="btn btn-outline-primary">查看订单</a>
+{% else %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            {% if product.image_url %}
+            <img src="{{ product.image_url }}" class="card-img-top" style="height:250px;object-fit:cover;" alt="{{ product.name }}">
+            {% endif %}
+            <div class="card-body">
+                <h4>{{ product.name }}</h4>
+                <p>{{ product.description or '暂无描述' }}</p>
+                <p class="text-danger fw-bold fs-4">{{ product.points_required }} 积分/件</p>
+                <p class="text-muted">我的积分：<strong>{{ user.points }}</strong></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">兑换数量</label>
+                        <input type="number" name="quantity" class="form-control" value="1" min="1"
+                            {% if product.stock > 0 %}max="{{ product.stock }}"{% endif %} required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">收货人姓名</label>
+                        <input type="text" name="contact_name" class="form-control" value="{{ session.user_name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">联系电话</label>
+                        <input type="text" name="contact_phone" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">收货地址</label>
+                        <textarea name="address" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100">确认兑换</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

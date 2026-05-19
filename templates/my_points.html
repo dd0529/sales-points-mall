@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}我的积分{% endblock %}
+{% block content %}
+<h2 class="mb-4">我的积分</h2>
+<div class="card shadow-sm mb-4">
+    <div class="card-body text-center">
+        <h6 class="text-muted">当前积分余额</h6>
+        <h1 class="text-success display-3">{{ user.points }}</h1>
+    </div>
+</div>
+<div class="card shadow-sm">
+    <div class="card-header"><h5 class="mb-0">积分流水</h5></div>
+    <div class="card-body p-0 table-responsive">
+        <table class="table table-sm mb-0">
+            <thead><tr><th>时间</th><th>来源</th><th>变动</th><th>余额</th></tr></thead>
+            <tbody>
+                {% for l in logs %}
+                <tr>
+                    <td>{{ l.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ l.source }}</td>
+                    <td class="{{ 'text-success' if l.points_change > 0 else 'text-danger' }}">
+                        {{ '+' if l.points_change > 0 }}{{ l.points_change }}
+                    </td>
+                    <td>{{ l.balance_after }}</td>
+                </tr>
+                {% endfor %}
+                {% if not logs %}
+                <tr><td colspan="4" class="text-center text-muted py-3">暂无积分记录</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

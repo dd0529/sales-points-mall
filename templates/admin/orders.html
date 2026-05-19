@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}订单管理{% endblock %}
+{% block content %}
+<h2 class="mb-4">订单管理</h2>
+<div class="card shadow-sm">
+    <div class="card-body p-0 table-responsive">
+        <table class="table table-sm mb-0">
+            <thead><tr><th>下单时间</th><th>用户</th><th>商品</th><th>数量</th><th>积分</th><th>收货人</th><th>联系电话</th><th>地址</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody>
+                {% for o in orders %}
+                <tr>
+                    <td>{{ o.created_at.strftime('%m-%d %H:%M') }}</td>
+                    <td>{{ o.user.name if o.user else '-' }}</td>
+                    <td>{{ o.product.name if o.product else '已下架' }}</td>
+                    <td>{{ o.quantity }}</td>
+                    <td>{{ o.points_spent }}</td>
+                    <td>{{ o.contact_name }}</td>
+                    <td>{{ o.contact_phone }}</td>
+                    <td>{{ o.address }}</td>
+                    <td><span class="badge bg-{{ 'warning' if o.status=='待处理' else 'info' if o.status=='处理中' else 'primary' if o.status=='已发货' else 'success' }}">{{ o.status }}</span></td>
+                    <td>
+                        <form method="POST" class="d-flex gap-1">
+                            <input type="hidden" name="action" value="status">
+                            <input type="hidden" name="order_id" value="{{ o.id }}">
+                            <select name="status" class="form-select form-select-sm" style="width:auto;">
+                                {% for s in ['待处理', '处理中', '已发货', '已完成'] %}
+                                <option value="{{ s }}" {{ 'selected' if o.status == s }}>{{ s }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary">更新</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not orders %}
+                <tr><td colspan="10" class="text-center text-muted py-3">暂无订单</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,6 @@
+.card-stats {
+    border-left: 4px solid #0d6efd;
+    transition: transform 0.2s;
+}
+.card-stats:hover { transform: translateY(-2px); }
+.ranking-table th { position: sticky; top: 0; background: #fff; z-index: 1; }

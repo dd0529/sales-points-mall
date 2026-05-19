@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}我的订单{% endblock %}
+{% block content %}
+<h2 class="mb-4">我的订单</h2>
+<div class="card shadow-sm">
+    <div class="card-body p-0 table-responsive">
+        <table class="table mb-0">
+            <thead><tr><th>下单时间</th><th>商品</th><th>数量</th><th>消耗积分</th><th>状态</th></tr></thead>
+            <tbody>
+                {% for o in orders %}
+                <tr>
+                    <td>{{ o.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ o.product.name if o.product else '已下架' }}</td>
+                    <td>{{ o.quantity }}</td>
+                    <td>{{ o.points_spent }}</td>
+                    <td>
+                        <span class="badge bg-{{ 'warning' if o.status=='待处理' else 'info' if o.status=='处理中' else 'primary' if o.status=='已发货' else 'success' }}">
+                            {{ o.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if not orders %}
+                <tr><td colspan="5" class="text-center text-muted py-3">暂无订单</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
