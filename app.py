@@ -34,13 +34,19 @@ def index():
     total_points = db.session.query(func.sum(SalesRecord.points)).scalar() or 0
     total_records = SalesRecord.query.count()
 
-    # Top 10 salespersons by amount
+    # Top 10 by amount, grouped by salesperson+biz+opening_date
     top_sales = db.session.query(
         SalesRecord.salesperson,
+        SalesRecord.biz_org_name,
+        SalesRecord.opening_date,
         func.sum(SalesRecord.amount).label('total_amt'),
         func.sum(SalesRecord.quantity).label('total_qty'),
         func.sum(SalesRecord.points).label('total_pts')
-    ).group_by(SalesRecord.salesperson).order_by(
+    ).group_by(
+        SalesRecord.salesperson,
+        SalesRecord.biz_org_name,
+        SalesRecord.opening_date
+    ).order_by(
         func.sum(SalesRecord.amount).desc()
     ).limit(10).all()
 
@@ -175,63 +181,68 @@ def import_confirm():
 
 @app.route('/ranking')
 def ranking():
-    dim = request.args.get('dim', 'salesperson')
+    dim = request.args.get('dim', 'all')
     page = request.args.get('page', 1, type=int)
     per_page = 50
 
-    dim_map = {
-        'salesperson': SalesRecord.salesperson,
-        'biz_org': SalesRecord.biz_org_name,
-        'product': SalesRecord.product_name,
-    }
-    group_col = dim_map.get(dim, SalesRecord.salesperson)
-
     query = db.session.query(
-        group_col.label('name'),
+        SalesRecord.salesperson,
+        SalesRecord.biz_org_name,
+        SalesRecord.opening_date,
         func.sum(SalesRecord.quantity).label('total_qty'),
         func.sum(SalesRecord.amount).label('total_amt'),
         func.sum(SalesRecord.points).label('total_pts')
-    ).group_by(group_col).order_by(desc('total_amt'))
+    ).group_by(
+        SalesRecord.salesperson,
+        SalesRecord.biz_org_name,
+        SalesRecord.opening_date
+    ).order_by(desc('total_amt'))
+
+    # Totals (without pagination)
+    totals = db.session.query(
+        func.sum(SalesRecord.amount),
+        func.sum(SalesRecord.points),
+        func.count()
+    ).first()
 
     pagination = query.paginate(page=page, per_page=per_page)
     results = pagination.items
 
     return render_template('ranking.html',
-        results=results, dim=dim, pagination=pagination,
-        enumerate=enumerate)
+        results=results, pagination=pagination,
+        totals=totals, enumerate=enumerate)
 
 
 @app.route('/ranking/export')
 def ranking_export():
-    dim = request.args.get('dim', 'salesperson')
-    dim_map = {
-        'salesperson': SalesRecord.salesperson,
-        'biz_org': SalesRecord.biz_org_name,
-        'product': SalesRecord.product_name,
-    }
-    group_col = dim_map.get(dim, SalesRecord.salesperson)
-
     results = db.session.query(
-        group_col.label('name'),
+        SalesRecord.salesperson,
+        SalesRecord.biz_org_name,
+        SalesRecord.opening_date,
         func.sum(SalesRecord.quantity).label('total_qty'),
         func.sum(SalesRecord.amount).label('total_amt'),
         func.sum(SalesRecord.points).label('total_pts')
-    ).group_by(group_col).order_by(desc('total_amt')).all()
+    ).group_by(
+        SalesRecord.salesperson,
+        SalesRecord.biz_org_name,
+        SalesRecord.opening_date
+    ).order_by(desc('total_amt')).all()
 
     import openpyxl as xl
     wb = xl.Workbook()
     ws = wb.active
     ws.title = '排名结果'
-    ws.append(['排名', '名称', '销售数量', '销售金额', '积分'])
+    ws.append(['排名', '门店开业时间', '业务机构名称', '营业员', '销售数量', '实际金额', '积分'])
     for i, r in enumerate(results, 1):
-        ws.append([i, r.name, round(r.total_qty, 2), round(r.total_amt, 2), r.total_pts])
+        ws.append([i, r.opening_date or '', r.biz_org_name, r.salesperson,
+                   round(r.total_qty, 2), round(r.total_amt, 2), r.total_pts])
 
     output = BytesIO()
     wb.save(output)
     output.seek(0)
     return send_file(output,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        as_attachment=True, download_name=f'ranking_{dim}.xlsx')
+        as_attachment=True, download_name='ranking.xlsx')
 
 
 @app.route('/mall')

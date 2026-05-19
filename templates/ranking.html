@@ -1,30 +1,63 @@
 {% extends "base.html" %}
-{% block title %}排名 - 积分系统{% endblock %}
+{% block title %}销售排名 - 积分系统{% endblock %}
 {% block content %}
-<h2 class="mb-3">销售排名</h2>
+<h2 class="page-title">销售排名</h2>
+<p class="page-subtitle">按营业员 · 业务机构 · 门店汇总</p>
 
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <div class="btn-group">
-        <a href="?dim=salesperson" class="btn btn-{{ 'primary' if dim=='salesperson' else 'outline-primary' }}">按营业员</a>
-        <a href="?dim=biz_org" class="btn btn-{{ 'primary' if dim=='biz_org' else 'outline-primary' }}">按业务机构</a>
-        <a href="?dim=product" class="btn btn-{{ 'primary' if dim=='product' else 'outline-primary' }}">按商品</a>
+<div class="totals-bar">
+    <div class="row align-items-center">
+        <div class="col-md-4 totals-item">
+            <div class="totals-value">¥{{ "%.2f"|format(totals[0] or 0) }}</div>
+            <div class="totals-label">总实际金额</div>
+        </div>
+        <div class="col-md-4 totals-item">
+            <div class="totals-value">{{ totals[1] or 0 }}</div>
+            <div class="totals-label">总积分</div>
+        </div>
+        <div class="col-md-4 totals-item">
+            <div class="totals-value">{{ totals[2] or 0 }}</div>
+            <div class="totals-label">总记录数</div>
+        </div>
     </div>
-    <a href="{{ url_for('ranking_export', dim=dim) }}" class="btn btn-success">导出 Excel</a>
 </div>
 
-<div class="card shadow-sm">
+<div class="d-flex justify-content-end mb-3">
+    <a href="{{ url_for('ranking_export') }}" class="btn btn-success">导出 Excel</a>
+</div>
+
+<div class="card">
     <div class="card-body p-0 table-responsive">
-        <table class="table table-striped mb-0">
-            <thead class="ranking-table">
-                <tr><th>排名</th><th>名称</th><th>销售数量</th><th>销售金额</th><th>积分</th></tr>
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>排名</th>
+                    <th>门店开业时间</th>
+                    <th>业务机构名称</th>
+                    <th>营业员</th>
+                    <th>销售数量</th>
+                    <th>实际金额</th>
+                    <th>积分</th>
+                </tr>
             </thead>
             <tbody>
                 {% set start = (pagination.page - 1) * pagination.per_page + 1 %}
                 {% for i, r in enumerate(results, start) %}
                 <tr>
-                    <td><span class="badge bg-{{ 'warning' if i<=3 else 'secondary' }}">{{ i }}</span></td>
-                    <td>{{ r.name }}</td>
-                    <td>{{ r.total_qty|round(2) }}</td>
+                    <td>
+                        {% if i == 1 %}
+                        <span class="badge-rank badge-rank-1">{{ i }}</span>
+                        {% elif i == 2 %}
+                        <span class="badge-rank badge-rank-2">{{ i }}</span>
+                        {% elif i == 3 %}
+                        <span class="badge-rank badge-rank-3">{{ i }}</span>
+                        {% else %}
+                        <span class="badge-rank badge-rank-other">{{ i }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ r.opening_date or '-' }}</td>
+                    <td>{{ r.biz_org_name }}</td>
+                    <td>{{ r.salesperson }}</td>
+                    <td>{{ r.total_qty|int }}</td>
                     <td>¥{{ "%.2f"|format(r.total_amt) }}</td>
                     <td><strong>{{ r.total_pts }}</strong></td>
                 </tr>
@@ -39,7 +72,7 @@
     <ul class="pagination justify-content-center">
         {% for p in range(1, pagination.pages + 1) %}
         <li class="page-item {{ 'active' if p == pagination.page }}">
-            <a class="page-link" href="?dim={{ dim }}&page={{ p }}">{{ p }}</a>
+            <a class="page-link" href="?page={{ p }}">{{ p }}</a>
         </li>
         {% endfor %}
     </ul>

@@ -13,6 +13,7 @@ class SalesRecord(db.Model):
     __tablename__ = 'sales_records'
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.String(20))
+    opening_date = db.Column(db.String(50))
     biz_org_name = db.Column(db.String(200))
     product_name = db.Column(db.String(100))
     salesperson = db.Column(db.String(50))

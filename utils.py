@@ -1,6 +1,12 @@
 import hashlib
 import openpyxl
 
+def safe_str(val):
+    """Convert cell value to string, treating None as empty."""
+    if val is None:
+        return ''
+    return str(val)
+
 def parse_excel(filepath):
     """Parse Excel file, return list of dicts and any error message."""
     try:
@@ -10,12 +16,13 @@ def parse_excel(filepath):
         return None, f'文件无法打开: {str(e)}'
 
     # Find header row (Row 1 per the sample file)
-    header_row = [str(c.value) if c.value is not None else '' for c in ws[1]]
+    header_row = [safe_str(c.value) for c in ws[1]]
 
     # Identify key columns by name substring matching
     col_map = {}
     for key, labels in [
         ('date', ['日期', '会计日']),
+        ('opening_date', ['门店开业时间']),
         ('biz_org_name', ['业务机构名称']),
         ('product_name', ['商品名称']),
         ('salesperson', ['营业员名字']),
@@ -25,7 +32,6 @@ def parse_excel(filepath):
         for i, h in enumerate(header_row):
             for label in labels:
                 if label in h:
-                    # Prevent matching '不含税' variants when looking for '实际金额'
                     if key == 'amount' and '不含税' in h:
                         continue
                     col_map[key] = i
@@ -52,21 +58,27 @@ def parse_excel(filepath):
         if amount <= 0:
             continue
 
-        prod = str(row[col_map['product_name']]) if row[col_map['product_name']] else ''
+        prod = safe_str(row[col_map['product_name']])
+        person = safe_str(row[col_map['salesperson']])
+        biz = safe_str(row[col_map['biz_org_name']])
+
+        # Skip total/summary rows (empty product or empty biz with empty person)
+        if not prod or (not biz and not person):
+            continue
 
         # Skip 桃花姬牌阿胶核桃芝麻糕
         if prod == '桃花姬牌阿胶核桃芝麻糕':
             continue
 
-        date_val = str(row[col_map['date']]) if 'date' in col_map and row[col_map['date']] else ''
-        biz = str(row[col_map['biz_org_name']]) if row[col_map['biz_org_name']] else ''
-        person = str(row[col_map['salesperson']]) if row[col_map['salesperson']] else ''
+        date_val = safe_str(row[col_map['date']]) if 'date' in col_map else ''
+        opening = safe_str(row[col_map['opening_date']]) if 'opening_date' in col_map else ''
 
         hash_str = f'{date_val}|{biz}|{prod}|{person}|{qty}|{amount}'
         row_hash = hashlib.md5(hash_str.encode()).hexdigest()
 
         records.append({
             'date': date_val,
+            'opening_date': opening,
             'biz_org_name': biz,
             'product_name': prod,
             'salesperson': person,

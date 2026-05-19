@@ -1,47 +1,94 @@
 {% extends "base.html" %}
 {% block title %}首页 - 积分系统{% endblock %}
 {% block content %}
-<h2 class="mb-4">仪表盘</h2>
+<h2 class="page-title">数据仪表盘</h2>
+<p class="page-subtitle">销售数据总览与排名</p>
+
+<div class="totals-bar">
+    <div class="row align-items-center">
+        <div class="col-md-4 totals-item">
+            <div class="totals-value">¥{{ "%.2f"|format(total_sales) }}</div>
+            <div class="totals-label">总实际金额</div>
+        </div>
+        <div class="col-md-4 totals-item">
+            <div class="totals-value">{{ total_points }}</div>
+            <div class="totals-label">总积分</div>
+        </div>
+        <div class="col-md-4 totals-item">
+            <div class="totals-value">{{ total_records }}</div>
+            <div class="totals-label">销售记录数</div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-3 mb-4">
     <div class="col-md-4">
-        <div class="card card-stats shadow-sm">
-            <div class="card-body">
-                <h6 class="text-muted">总销售金额</h6>
-                <h3 class="text-primary">¥{{ "%.2f"|format(total_sales) }}</h3>
+        <div class="stat-card d-flex align-items-center">
+            <div class="stat-icon icon-red me-3">&#128202;</div>
+            <div>
+                <div class="stat-label">总实际金额</div>
+                <div class="stat-value" style="color:var(--primary)">¥{{ "%.2f"|format(total_sales) }}</div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card card-stats shadow-sm">
-            <div class="card-body">
-                <h6 class="text-muted">总积分</h6>
-                <h3 class="text-success">{{ total_points }}</h3>
+        <div class="stat-card d-flex align-items-center">
+            <div class="stat-icon icon-gold me-3">&#11088;</div>
+            <div>
+                <div class="stat-label">总积分</div>
+                <div class="stat-value" style="color:var(--gold)">{{ total_points }}</div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card card-stats shadow-sm">
-            <div class="card-body">
-                <h6 class="text-muted">销售记录数</h6>
-                <h3 class="text-warning">{{ total_records }}</h3>
+        <div class="stat-card d-flex align-items-center">
+            <div class="stat-icon icon-green me-3">&#128200;</div>
+            <div>
+                <div class="stat-label">销售记录数</div>
+                <div class="stat-value" style="color:var(--success)">{{ total_records }}</div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-header"><h5 class="mb-0">销售金额 Top 10</h5></div>
-    <div class="card-body p-0">
-        <table class="table table-striped mb-0">
-            <thead class="ranking-table"><tr><th>排名</th><th>营业员</th><th>销售数量</th><th>销售金额</th><th>积分</th></tr></thead>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">销售金额 Top 10</h5>
+        <small class="text-muted">按营业员 · 业务机构汇总</small>
+    </div>
+    <div class="card-body p-0 table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>排名</th>
+                    <th>门店开业时间</th>
+                    <th>业务机构名称</th>
+                    <th>营业员</th>
+                    <th>销售数量</th>
+                    <th>实际金额</th>
+                    <th>积分</th>
+                </tr>
+            </thead>
             <tbody>
                 {% for i, s in enumerate(top_sales, 1) %}
                 <tr>
-                    <td><span class="badge bg-{{ 'warning' if i<=3 else 'secondary' }}">{{ i }}</span></td>
+                    <td>
+                        {% if i == 1 %}
+                        <span class="badge-rank badge-rank-1">{{ i }}</span>
+                        {% elif i == 2 %}
+                        <span class="badge-rank badge-rank-2">{{ i }}</span>
+                        {% elif i == 3 %}
+                        <span class="badge-rank badge-rank-3">{{ i }}</span>
+                        {% else %}
+                        <span class="badge-rank badge-rank-other">{{ i }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ s.opening_date or '-' }}</td>
+                    <td>{{ s.biz_org_name }}</td>
                     <td>{{ s.salesperson }}</td>
                     <td>{{ s.total_qty|int }}</td>
                     <td>¥{{ "%.2f"|format(s.total_amt) }}</td>
-                    <td>{{ s.total_pts }}</td>
+                    <td><strong>{{ s.total_pts }}</strong></td>
                 </tr>
                 {% endfor %}
             </tbody>
